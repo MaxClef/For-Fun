@@ -1,0 +1,94 @@
+# Libraries
+import pandas as pd
+import os
+from langdetect import detect
+import re
+import pytesseract
+import cv2
+import pdf2image
+from pdf2image import convert_from_path
+import PyPDF2   # option 1 to read pdfs
+import fitz    # oprtion 2 to read pdfs (I'm using this)
+
+# path to dir with all files
+PATH = "#####"  # add the path to the files
+
+# files names in a list
+all_files = list(os.listdir(PATH))
+
+# full path
+FULL_PATH = list(map(lambda path: PATH + path, all_files))
+
+# checking 
+print(f"Number of files to be scanned: {len(FULL_PATH)}")
+
+# function to get text from OCR files
+def ocr_text(path):
+    '''
+    Dicstring: extract text from scanned pdfs
+    
+    path = path to the file
+    '''
+    
+    # list to store text from pages
+    text = []
+    
+    try:
+        # convert to img and number of pages
+        pages = convert_from_path(path, 500, poppler_path = "C:/Program Files/poppler-0.67.0/bin") 
+
+        for page in pages:
+            txt = pytesseract.image_to_string(page)   # get text from img
+            text.append(txt.replace("  ", "").replace("\n\n", " ").replace("\n", " "))
+    except:
+        text.append(path)
+        
+    return " ".join(text)
+
+# function to get the text from pdf files
+def pdf_text(path):
+    '''
+    Docstring: getting text from readable pdfs 
+        
+    path = path to the file
+    '''
+    
+    # list to store text from pages
+    txt = []
+    
+    try: 
+        doc = fitz.open(path)    # get and open file
+
+        for page in range(doc.pageCount):
+            page_ = doc.load_page(page)    # load page
+            page_text = page_.get_text("text")    # get the text
+            txt.append(page_text)    
+    except:
+        txt.append(path)
+        
+    return str(" ".join(txt).replace("\n", " "))
+
+# function to extract text from all files
+def get_results(FULL_PATH):
+    '''
+    Docstring: getting reasults as a dictionary
+    
+    FULL_PATH = path to all pdf files
+    '''
+    final_result = {}
+    
+    for path in FULL_PATH:
+        txt = pdf_text(path)   # reding the file
+        
+        # if len file is > 100 adding to dictionary, else sign that it's OCR
+        if len(txt) > 100:
+            final_result[path] = txt    
+        else:
+            txt = ocr_text(path)
+            final_result[path] = txt   
+        
+    return final_result
+
+
+# getting text from all files
+full_text = get_results(FULL_PATH = FULL_PATH)
