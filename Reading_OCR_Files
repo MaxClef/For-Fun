@@ -92,3 +92,11 @@ def get_results(FULL_PATH):
 
 # getting text from all files
 full_text = get_results(FULL_PATH = FULL_PATH)
+
+# Check for curropt files
+x = 0
+for k, v in full_text.items():
+    x += 1
+    if len(v) < 100:
+        print(f"File number {x}")
+        print(full_text[k])
